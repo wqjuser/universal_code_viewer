@@ -50,7 +50,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  universal_syntax_highlighter: ^1.0.0
+  universal_code_viewer: ^1.0.0
 ```
 
 Install packages from the command line:
@@ -62,7 +62,7 @@ flutter pub get
 ## Basic Usage
 
 ```dart
-import 'package:universal_syntax_highlighter/universal_syntax_highlighter.dart';
+import 'package:universal_code_viewer/universal_code_viewer.dart';
 
 UniversalCodeViewer(
   code: '''

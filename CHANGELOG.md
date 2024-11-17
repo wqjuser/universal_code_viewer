@@ -7,3 +7,6 @@
 ## 1.0.1
     - License update
     - Readme update
+
+## 1.0.1+1
+    - Readme update
