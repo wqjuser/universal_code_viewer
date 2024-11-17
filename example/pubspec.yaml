@@ -2,7 +2,10 @@ name: universal_code_viewer_example
 description: "Demonstrates how to use the universal_code_viewer plugin."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+version: 1.0.1
+authors:
+  - samuelezedi@gmail.com
+homepage: https://github.com/samuelezedi/flutter_clipboard
 
 environment:
   sdk: ^3.5.3

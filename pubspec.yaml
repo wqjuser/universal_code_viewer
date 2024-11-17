@@ -1,7 +1,7 @@
 name: universal_code_viewer
-description: "A new Flutter project."
-version: 0.0.1
-homepage:
+description: "A powerful, customizable Universal Code Viewer for Flutter that supports 50+ programming languages and multiple themes. Built for performance and extensibility."
+version: 1.0.0
+homepage: https://github.com/codefusionbit/universal_code_viewer
 
 environment:
   sdk: ^3.5.3

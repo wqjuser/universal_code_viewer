@@ -23,10 +23,10 @@ import 'package:universal_code_viewer/universal_code_viewer.dart';
 
 void main() {
   const sampleDartCode = '''
-                          void main() {
-                            print("Hello, World!");
-                          }
-                          ''';
+void main() {
+  print("Hello, World!");
+}
+''';
 
   group('UniversalCodeViewer Widget Tests', () {
     setUp(() {
