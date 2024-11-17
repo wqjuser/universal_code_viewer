@@ -11,13 +11,13 @@ A powerful, customizable Universal Code Viewer for Flutter that supports 50+ pro
 
 ## Features
 
-🎨 Multiple built-in themes (VSCode, GitHub, Dracula, etc.)
-🔍 Automatic language detection
-📝 Support for 50+ programming languages
-✨ Customizable syntax styles
-📋 Copy to clipboard functionality
-🔢 Optional line numbers
-🎯 Built for Flutter
+- 🎨 Multiple built-in themes (VSCode, GitHub, Dracula, etc.)
+- 🔍 Automatic language detection
+- 📝 Support for 50+ programming languages
+- ✨ Customizable syntax styles
+- 📋 Copy to clipboard functionality
+- 🔢 Optional line numbers
+- 🎯 Built for Flutter
 
 ## Platform Support
 
