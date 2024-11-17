@@ -1,11 +1,11 @@
-# universal_code_viewer
+# Universal Code Viewer
 
 A powerful, customizable Universal Code Viewer for Flutter that supports 50+ programming languages and multiple themes. Built for performance and extensibility.
 
-[![pub package](https://img.shields.io/pub/v/universal_syntax_highlighter.svg)](https://pub.dev/packages/universal_code_viewer)
-[![likes](https://img.shields.io/pub/likes/universal_syntax_highlighter?logo=dart)](https://pub.dev/packages/universal_code_viewer/score)
-[![popularity](https://img.shields.io/pub/popularity/universal_syntax_highlighter?logo=dart)](https://pub.dev/packages/universal_code_viewer/score)
-[![license](https://img.shields.io/github/license/yourusername/universal_code_viewer)](LICENSE)
+[![pub package](https://img.shields.io/pub/v/universal_code_viewer.svg)](https://pub.dev/packages/universal_code_viewer)
+[![likes](https://img.shields.io/pub/likes/universal_code_viewer?logo=dart)](https://pub.dev/packages/universal_code_viewer/score)
+[![popularity](https://img.shields.io/pub/popularity/universal_code_viewer?logo=dart)](https://pub.dev/packages/universal_code_viewer/score)
+[![license](https://img.shields.io/github/license/codefusionbit/universal_code_viewer)](LICENSE)
 
 ## Features
 
