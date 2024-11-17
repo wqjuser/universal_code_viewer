@@ -7,6 +7,8 @@ A powerful, customizable Universal Code Viewer for Flutter that supports 50+ pro
 [![popularity](https://img.shields.io/pub/popularity/universal_code_viewer?logo=dart)](https://pub.dev/packages/universal_code_viewer/score)
 [![license](https://img.shields.io/github/license/codefusionbit/universal_code_viewer)](LICENSE)
 
+[![Code Fusion Bit](https://github.com/codefusionbit/universal_code_viewer/blob/main/screenshots/codefusionbit.jpg)](https://codefusionbit.com/)
+
 ## Features
 
 🎨 Multiple built-in themes (VSCode, GitHub, Dracula, etc.)
