@@ -26,10 +26,20 @@ A powerful, customizable Universal Code Viewer for Flutter that supports 50+ pro
 ## Preview
 
 ### Mobile iOS
+| Light Theme | Dark Theme |
+|------------|------------|
+| ![iOS Light Theme](https://github.com/codefusionbit/universal_code_viewer/blob/main/screenshots/ios_light.png) | ![iOS Dark Theme](https://github.com/codefusionbit/universal_code_viewer/blob/main/screenshots/ios_dark.png) |
 
 ### Mobile Android
+| Light Theme | Dark Theme |
+|------------|------------|
+| ![Android Light Theme](https://github.com/codefusionbit/universal_code_viewer/blob/main/screenshots/android_light.png) | ![Android Dark Theme](https://github.com/codefusionbit/universal_code_viewer/blob/main/screenshots/android_dark.png) |
 
 ### Web
+| Light Theme | Dark Theme |
+|------------|------------|
+| ![Web Light Theme](https://github.com/codefusionbit/universal_code_viewer/blob/main/screenshots/web_light.png) | ![Web Dark Theme](https://github.com/codefusionbit/universal_code_viewer/blob/main/screenshots/web_dark.png) |
+
 
 
 ## Installation
