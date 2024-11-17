@@ -193,8 +193,6 @@ class SyntaxHighlighterStyles {
   );
 }
 
-
-
 class SyntaxStyle {
   final TextStyle baseStyle;
   final TextStyle keywordStyle;
