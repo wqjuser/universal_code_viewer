@@ -13,7 +13,6 @@ library;
  * Contact: info@codefusionbit.com
  */
 
-
 /// A span of text that should be highlighted in a specific way.
 export 'src/highlight_span.dart';
 

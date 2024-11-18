@@ -8,7 +8,8 @@ abstract class UniversalCodeViewerPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static UniversalCodeViewerPlatform _instance = MethodChannelUniversalCodeViewer();
+  static UniversalCodeViewerPlatform _instance =
+      MethodChannelUniversalCodeViewer();
 
   /// The default instance of [UniversalCodeViewerPlatform] to use.
   ///

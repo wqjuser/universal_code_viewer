@@ -5,11 +5,13 @@ import 'package:universal_code_viewer/universal_code_viewer_method_channel.dart'
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelUniversalCodeViewer platform = MethodChannelUniversalCodeViewer();
+  MethodChannelUniversalCodeViewer platform =
+      MethodChannelUniversalCodeViewer();
   const MethodChannel channel = MethodChannel('universal_code_viewer');
 
   setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
       channel,
       (MethodCall methodCall) async {
         return '42';
@@ -18,7 +20,8 @@ void main() {
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
   });
 
   test('getPlatformVersion', () async {

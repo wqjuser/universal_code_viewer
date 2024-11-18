@@ -10,3 +10,9 @@
 
 ## 1.0.1+1
     - Readme update
+
+## 1.0.1+2
+    - License update
+
+## 1.0.1+3
+    - Code Formatted update
