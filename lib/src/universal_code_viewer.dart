@@ -1,16 +1,3 @@
-/*
- * Copyright (c) 2024 CodeFusionBit. All rights reserved.
- * Author: Hitesh Sapra
- *
- * This software is the confidential and proprietary information of CodeFusionBit.
- * You shall not disclose such confidential information and shall use it only in
- * accordance with the terms of the license agreement you entered into with
- * CodeFusionBit.
- *
- * Website: https://codefusionbit.com
- * Contact: info@codefusionbit.com
- */
-
 import 'package:flutter/services.dart';
 import 'package:universal_code_viewer/universal_code_viewer.dart';
 import 'package:flutter/material.dart';
@@ -55,20 +42,10 @@ class UniversalCodeViewer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(context, highlighter),
-          Padding(
-            padding: effectivePadding,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (showLineNumbers) _buildLineNumbers(lines),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: _buildCodeContent(highlighter, lines),
-                  ),
-                ),
-              ],
+          Expanded(
+            child: Padding(
+              padding: effectivePadding,
+              child: _buildCodeContent(highlighter, lines),
             ),
           ),
         ],
@@ -117,9 +94,44 @@ class UniversalCodeViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildLineNumbers(List<String> lines) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
+  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines) {
+    final scrollController = ScrollController();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showLineNumbers) _buildLineNumbers(lines, scrollController),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: SelectionArea(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: IntrinsicWidth(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: List.generate(
+                      lines.length,
+                      (index) => _buildCodeLine(
+                        lines[index],
+                        highlighter,
+                        index,
+                        lines,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLineNumbers(List<String> lines, ScrollController scrollController) {
+    return SingleChildScrollView(
+      controller: scrollController,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: List.generate(
@@ -127,7 +139,7 @@ class UniversalCodeViewer extends StatelessWidget {
           (index) => SizedBox(
             height: 24,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.only(right: 16, top: 4, bottom: 4),
               child: Text(
                 '${index + 1}',
                 style: style.baseStyle.copyWith(
@@ -141,71 +153,53 @@ class UniversalCodeViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines) {
-    // 创建一个包含所有代码的富文本
-    final List<TextSpan> allCodeSpans = [];
-    int currentPosition = 0;
-
-    for (int i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      final lineSpans = _getLineSpans(
-        line,
-        highlighter,
-        currentPosition,
-        lines,
-        i,
-      );
-
-      allCodeSpans.addAll(lineSpans);
-
-      // 添加换行符，除了最后一行
-      if (i < lines.length - 1) {
-        allCodeSpans.add(TextSpan(
-          text: '\n',
-          style: style.baseStyle,
-        ));
-      }
-
-      currentPosition += line.length + (i < lines.length - 1 ? 1 : 0);
-    }
-
-    // 使用SelectableText.rich包装所有内容
-    return SelectableText.rich(
-      TextSpan(children: allCodeSpans),
-      style: style.baseStyle,
+  Widget _buildCodeLine(
+    String line,
+    UniversalSyntaxHighlighter highlighter,
+    int lineIndex,
+    List<String> allLines,
+  ) {
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Text.rich(
+        TextSpan(
+          children: _getLineSpans(
+            line,
+            highlighter,
+            lineIndex,
+            allLines,
+          ),
+        ),
+        style: style.baseStyle,
+      ),
     );
   }
 
   List<TextSpan> _getLineSpans(
     String line,
     UniversalSyntaxHighlighter highlighter,
-    int lineStart,
-    List<String> allLines,
     int lineIndex,
+    List<String> allLines,
   ) {
     final List<TextSpan> spans = [];
+    final int lineStart = allLines.take(lineIndex).join('\n').length + (lineIndex > 0 ? 1 : 0);
     final int lineEnd = lineStart + line.length;
 
-    // 获取与该行相交的spans
-    final lineSpans = highlighter.spans
-        .where((span) => span.start < lineEnd && span.end > lineStart);
+    final lineSpans = highlighter.spans.where((span) => span.start < lineEnd && span.end > lineStart);
 
     int currentPosition = 0;
 
     for (var span in lineSpans) {
-      // 转换为行内位置
       final spanStartInLine = (span.start - lineStart).clamp(0, line.length);
       final spanEndInLine = (span.end - lineStart).clamp(0, line.length);
 
-      // 添加未样式化的文本
       if (currentPosition < spanStartInLine) {
         spans.add(TextSpan(
           text: line.substring(currentPosition, spanStartInLine),
-          style: style.baseStyle,
         ));
       }
 
-      // 添加样式化的span
       if (spanStartInLine < spanEndInLine) {
         spans.add(TextSpan(
           text: line.substring(spanStartInLine, spanEndInLine),
@@ -216,11 +210,9 @@ class UniversalCodeViewer extends StatelessWidget {
       currentPosition = spanEndInLine;
     }
 
-    // 添加剩余的未样式化文本
     if (currentPosition < line.length) {
       spans.add(TextSpan(
         text: line.substring(currentPosition),
-        style: style.baseStyle,
       ));
     }
 
@@ -262,9 +254,7 @@ class UniversalCodeViewer extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Code copied to clipboard'),
-          backgroundColor: style.backgroundColor.computeLuminance() > 0.5
-              ? Colors.black87
-              : Colors.white70,
+          backgroundColor: style.backgroundColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white70,
           behavior: SnackBarBehavior.floating,
           width: 200,
           shape: RoundedRectangleBorder(
