@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:universal_code_viewer/universal_code_viewer.dart';
 import 'package:flutter/material.dart';
 
-class UniversalCodeViewer extends StatelessWidget {
+class UniversalCodeViewer extends StatefulWidget {
   final String code;
   final SyntaxStyle style;
   final bool showLineNumbers;
@@ -25,27 +25,51 @@ class UniversalCodeViewer extends StatelessWidget {
   });
 
   @override
+  State<UniversalCodeViewer> createState() => _UniversalCodeViewerState();
+}
+
+class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
+  late final ScrollController _verticalScrollController;
+  late final ScrollController _horizontalScrollController;
+  late final List<String> _lines;
+  late final UniversalSyntaxHighlighter _highlighter;
+
+  @override
+  void initState() {
+    super.initState();
+    _verticalScrollController = ScrollController();
+    _horizontalScrollController = ScrollController();
+    _lines = widget.code.split('\n');
+    _highlighter = UniversalSyntaxHighlighter(widget.code);
+  }
+
+  @override
+  void dispose() {
+    _verticalScrollController.dispose();
+    _horizontalScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final highlighter = UniversalSyntaxHighlighter(code);
-    final lines = code.split('\n');
-    final effectivePadding = padding ?? const EdgeInsets.all(16);
+    final effectivePadding = widget.padding ?? const EdgeInsets.all(16);
 
     return Container(
       decoration: BoxDecoration(
-        color: style.backgroundColor,
+        color: widget.style.backgroundColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
+          color: widget.style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(context, highlighter),
+          _buildHeader(context),
           Expanded(
             child: Padding(
               padding: effectivePadding,
-              child: _buildCodeContent(highlighter, lines),
+              child: _buildCodeContent(),
             ),
           ),
         ],
@@ -53,12 +77,12 @@ class UniversalCodeViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, UniversalSyntaxHighlighter highlighter) {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
+            color: widget.style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
           ),
         ),
       ),
@@ -67,23 +91,23 @@ class UniversalCodeViewer extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
-            child: isCodeLanguageView
+            child: widget.isCodeLanguageView
                 ? Text(
-                    codeLanguage ?? highlighter.detectedLanguage.toUpperCase(),
-                    style: style.baseStyle.copyWith(
-                      color: style.baseStyle.color?.withOpacity(0.5),
+                    widget.codeLanguage ?? _highlighter.detectedLanguage.toUpperCase(),
+                    style: widget.style.baseStyle.copyWith(
+                      color: widget.style.baseStyle.color?.withOpacity(0.5),
                       fontSize: 12,
                     ),
                   )
                 : const SizedBox(),
           ),
-          if (enableCopy) ...[
-            copyWidget ??
+          if (widget.enableCopy) ...[
+            widget.copyWidget ??
                 IconButton(
                   icon: Icon(
                     Icons.copy_rounded,
                     size: 18,
-                    color: style.baseStyle.color?.withOpacity(0.5),
+                    color: widget.style.baseStyle.color?.withOpacity(0.5),
                   ),
                   tooltip: 'Copy to clipboard',
                   onPressed: () => _copyToClipboard(context),
@@ -94,58 +118,47 @@ class UniversalCodeViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines) {
-    final scrollController = ScrollController();
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (showLineNumbers) _buildLineNumbers(lines, scrollController),
-        Expanded(
-          child: SingleChildScrollView(
-            controller: scrollController,
-            child: SelectionArea(
+  Widget _buildCodeContent() {
+    return SelectionArea(
+      child: SingleChildScrollView(
+        controller: _verticalScrollController,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.showLineNumbers) _buildLineNumbers(),
+            Expanded(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
+                controller: _horizontalScrollController,
                 child: IntrinsicWidth(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: List.generate(
-                      lines.length,
-                      (index) => _buildCodeLine(
-                        lines[index],
-                        highlighter,
-                        index,
-                        lines,
-                      ),
+                      _lines.length,
+                      (index) => _buildCodeLine(_lines[index], index),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildLineNumbers(List<String> lines, ScrollController scrollController) {
-    return SingleChildScrollView(
-      controller: scrollController,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(
-          lines.length,
-          (index) => SizedBox(
-            height: 24,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16, top: 4, bottom: 4),
-              child: Text(
-                '${index + 1}',
-                style: style.baseStyle.copyWith(
-                  color: style.baseStyle.color?.withOpacity(0.5),
-                ),
-              ),
+  Widget _buildLineNumbers() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: List.generate(
+        _lines.length,
+        (index) => Container(
+          height: 24,
+          padding: const EdgeInsets.only(right: 16, vertical: 4),
+          child: Text(
+            '${index + 1}',
+            style: widget.style.baseStyle.copyWith(
+              color: widget.style.baseStyle.color?.withOpacity(0.5),
             ),
           ),
         ),
@@ -153,40 +166,27 @@ class UniversalCodeViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildCodeLine(
-    String line,
-    UniversalSyntaxHighlighter highlighter,
-    int lineIndex,
-    List<String> allLines,
-  ) {
+  Widget _buildCodeLine(String line, int lineIndex) {
     return Container(
       height: 24,
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Text.rich(
         TextSpan(
-          children: _getLineSpans(
-            line,
-            highlighter,
-            lineIndex,
-            allLines,
-          ),
+          children: _getLineSpans(line, lineIndex),
         ),
-        style: style.baseStyle,
+        style: widget.style.baseStyle,
       ),
     );
   }
 
-  List<TextSpan> _getLineSpans(
-    String line,
-    UniversalSyntaxHighlighter highlighter,
-    int lineIndex,
-    List<String> allLines,
-  ) {
+  List<TextSpan> _getLineSpans(String line, int lineIndex) {
     final List<TextSpan> spans = [];
-    final int lineStart = allLines.take(lineIndex).join('\n').length + (lineIndex > 0 ? 1 : 0);
+    final int lineStart = _lines.take(lineIndex).join('\n').length +
+        (lineIndex > 0 ? 1 : 0);
     final int lineEnd = lineStart + line.length;
 
-    final lineSpans = highlighter.spans.where((span) => span.start < lineEnd && span.end > lineStart);
+    final lineSpans = _highlighter.spans
+        .where((span) => span.start < lineEnd && span.end > lineStart);
 
     int currentPosition = 0;
 
@@ -222,39 +222,41 @@ class UniversalCodeViewer extends StatelessWidget {
   TextStyle _getStyleForType(String type) {
     switch (type) {
       case 'keyword':
-        return style.keywordStyle;
+        return widget.style.keywordStyle;
       case 'class':
-        return style.classStyle;
+        return widget.style.classStyle;
       case 'method':
-        return style.methodStyle;
+        return widget.style.methodStyle;
       case 'variable':
-        return style.variableStyle;
+        return widget.style.variableStyle;
       case 'string':
-        return style.stringStyle;
+        return widget.style.stringStyle;
       case 'number':
-        return style.numberStyle;
+        return widget.style.numberStyle;
       case 'comment':
-        return style.commentStyle;
+        return widget.style.commentStyle;
       case 'tag':
-        return style.tagStyle;
+        return widget.style.tagStyle;
       case 'attribute':
-        return style.attributeStyle;
+        return widget.style.attributeStyle;
       case 'operator':
-        return style.operatorStyle;
+        return widget.style.operatorStyle;
       case 'punctuation':
-        return style.punctuationStyle;
+        return widget.style.punctuationStyle;
       default:
-        return style.baseStyle;
+        return widget.style.baseStyle;
     }
   }
 
   Future<void> _copyToClipboard(BuildContext context) async {
-    await Clipboard.setData(ClipboardData(text: code));
+    await Clipboard.setData(ClipboardData(text: widget.code));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Code copied to clipboard'),
-          backgroundColor: style.backgroundColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white70,
+          backgroundColor: widget.style.backgroundColor.computeLuminance() > 0.5
+              ? Colors.black87
+              : Colors.white70,
           behavior: SnackBarBehavior.floating,
           width: 200,
           shape: RoundedRectangleBorder(
