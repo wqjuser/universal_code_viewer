@@ -11,6 +11,8 @@
  * Contact: info@codefusionbit.com
  */
 
+import 'dart:ui';
+
 import 'package:flutter/services.dart';
 import 'package:universal_code_viewer/universal_code_viewer.dart';
 import 'package:flutter/material.dart';
@@ -65,7 +67,7 @@ class UniversalCodeViewer extends StatelessWidget {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     physics: const AlwaysScrollableScrollPhysics(),
-                    child: _buildCodeContent(highlighter, lines),
+                    child: _buildCodeContent(highlighter, lines,context),
                   ),
                 ),
               ],
@@ -141,8 +143,7 @@ class UniversalCodeViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines) {
-    // 创建一个包含所有代码的富文本
+  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines,BuildContext context) {
     final List<TextSpan> allCodeSpans = [];
     int currentPosition = 0;
 
@@ -169,12 +170,37 @@ class UniversalCodeViewer extends StatelessWidget {
       currentPosition += line.length + (i < lines.length - 1 ? 1 : 0);
     }
 
-    // 使用SelectableText.rich包装所有内容
-    return SelectableText.rich(
-      TextSpan(children: allCodeSpans),
-      style: style.baseStyle,
+    return ScrollConfiguration(
+      // 禁用默认的滚动行为
+      behavior: ScrollConfiguration.of(context).copyWith(
+        scrollbars: false,
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.trackpad,
+        },
+      ),
+      child: SelectionArea(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const ClampingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              // 确保内容至少和父容器一样宽
+              minWidth: MediaQuery.of(context).size.width -
+                       (showLineNumbers ? 60 : 32) - // 减去行号宽度和padding
+                       (padding?.horizontal ?? 32),
+            ),
+            child: Text.rich(
+              TextSpan(children: allCodeSpans),
+              style: style.baseStyle,
+            ),
+          ),
+        ),
+      ),
     );
-  }
+}
 
   List<TextSpan> _getLineSpans(
     String line,
