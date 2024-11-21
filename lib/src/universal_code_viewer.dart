@@ -154,7 +154,7 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
         _lines.length,
         (index) => Container(
           height: 24,
-          padding: const EdgeInsets.only(right: 16, vertical: 4),
+          padding: const EdgeInsets.only(right: 16, top: 4,bottom: 4),
           child: Text(
             '${index + 1}',
             style: widget.style.baseStyle.copyWith(
