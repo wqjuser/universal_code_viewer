@@ -1,8 +1,8 @@
-import 'package:flutter/services.dart';
-import 'package:universal_code_viewer/universal_code_viewer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../universal_code_viewer.dart';
 
-class UniversalCodeViewer extends StatefulWidget {
+class UniversalCodeViewer extends StatelessWidget {
   final String code;
   final SyntaxStyle style;
   final bool showLineNumbers;
@@ -25,47 +25,40 @@ class UniversalCodeViewer extends StatefulWidget {
   });
 
   @override
-  State<UniversalCodeViewer> createState() => _UniversalCodeViewerState();
-}
-
-class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
-  late final List<String> _lines;
-  late final UniversalSyntaxHighlighter _highlighter;
-  final ScrollController _horizontalScrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _lines = widget.code.split('\n');
-    _highlighter = UniversalSyntaxHighlighter(widget.code);
-  }
-
-  @override
-  void dispose() {
-    _horizontalScrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final effectivePadding = widget.padding ?? const EdgeInsets.all(16);
+    final highlighter = UniversalSyntaxHighlighter(code);
+    final lines = code.split('\n');
+    final effectivePadding = padding ?? const EdgeInsets.all(16);
 
     return Container(
       decoration: BoxDecoration(
-        color: widget.style.backgroundColor,
+        color: style.backgroundColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: widget.style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
+          color: style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(context),
+          _buildHeader(context, highlighter),
           Expanded(
             child: Padding(
               padding: effectivePadding,
-              child: _buildCodeContent(),
+              child: SelectionArea(
+                child: SingleChildScrollView(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (showLineNumbers) _buildLineNumbers(lines),
+                        _buildCodeContent(highlighter, lines),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -73,12 +66,12 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, UniversalSyntaxHighlighter highlighter) {
     return Container(
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: widget.style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
+            color: style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
           ),
         ),
       ),
@@ -87,23 +80,23 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
-            child: widget.isCodeLanguageView
+            child: isCodeLanguageView
                 ? Text(
-                    widget.codeLanguage ?? _highlighter.detectedLanguage.toUpperCase(),
-                    style: widget.style.baseStyle.copyWith(
-                      color: widget.style.baseStyle.color?.withOpacity(0.5),
+                    codeLanguage ?? highlighter.detectedLanguage.toUpperCase(),
+                    style: style.baseStyle.copyWith(
+                      color: style.baseStyle.color?.withOpacity(0.5),
                       fontSize: 12,
                     ),
                   )
                 : const SizedBox(),
           ),
-          if (widget.enableCopy) ...[
-            widget.copyWidget ??
+          if (enableCopy) ...[
+            copyWidget ??
                 IconButton(
                   icon: Icon(
                     Icons.copy_rounded,
                     size: 18,
-                    color: widget.style.baseStyle.color?.withOpacity(0.5),
+                    color: style.baseStyle.color?.withOpacity(0.5),
                   ),
                   tooltip: 'Copy to clipboard',
                   onPressed: () => _copyToClipboard(context),
@@ -114,23 +107,23 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
     );
   }
 
-  Widget _buildCodeContent() {
-    return SelectionArea(
-      child: ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          controller: _horizontalScrollController,
-          child: SizedBox(
-            width: _calculateContentWidth(),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (widget.showLineNumbers) _buildLineNumbers(),
-                Expanded(
-                  child: _buildCodeLines(),
+  Widget _buildLineNumbers(List<String> lines) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: List.generate(
+          lines.length,
+          (index) => SizedBox(
+            height: 24,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                '${index + 1}',
+                style: style.baseStyle.copyWith(
+                  color: style.baseStyle.color?.withOpacity(0.5),
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -138,65 +131,43 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
     );
   }
 
-  double _calculateContentWidth() {
-    // 计算最长行的宽度，这里使用一个估算值
-    // 你可以根据实际情况调整计算方法
-    final longestLine = _lines.reduce((a, b) => a.length > b.length ? a : b);
-    return (longestLine.length * 10.0) + (widget.showLineNumbers ? 60.0 : 0.0);
-  }
-
-  Widget _buildLineNumbers() {
-    return Container(
-      width: 60,
-      padding: const EdgeInsets.only(right: 16),
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _lines.length,
-        itemBuilder: (context, index) => Container(
+  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(
+        lines.length,
+        (index) => Container(
           height: 24,
           padding: const EdgeInsets.symmetric(vertical: 4),
-          alignment: Alignment.centerRight,
-          child: Text(
-            '${index + 1}',
-            style: widget.style.baseStyle.copyWith(
-              color: widget.style.baseStyle.color?.withOpacity(0.5),
+          child: Text.rich(
+            TextSpan(
+              children: _getLineSpans(
+                lines[index],
+                highlighter,
+                index,
+                lines,
+              ),
             ),
+            style: style.baseStyle,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCodeLines() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const ClampingScrollPhysics(),
-      itemCount: _lines.length,
-      itemBuilder: (context, index) => _buildCodeLine(_lines[index], index),
-    );
-  }
-
-  Widget _buildCodeLine(String line, int lineIndex) {
-    return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text.rich(
-        TextSpan(
-          children: _getLineSpans(line, lineIndex),
-        ),
-        style: widget.style.baseStyle,
-      ),
-    );
-  }
-
-  List<TextSpan> _getLineSpans(String line, int lineIndex) {
+  List<TextSpan> _getLineSpans(
+    String line,
+    UniversalSyntaxHighlighter highlighter,
+    int lineIndex,
+    List<String> allLines,
+  ) {
     final List<TextSpan> spans = [];
-    final int lineStart = _lines.take(lineIndex).join('\n').length +
+    final int lineStart = allLines.take(lineIndex).join('\n').length +
         (lineIndex > 0 ? 1 : 0);
     final int lineEnd = lineStart + line.length;
 
-    final lineSpans = _highlighter.spans
+    final lineSpans = highlighter.spans
         .where((span) => span.start < lineEnd && span.end > lineStart);
 
     int currentPosition = 0;
@@ -208,6 +179,7 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
       if (currentPosition < spanStartInLine) {
         spans.add(TextSpan(
           text: line.substring(currentPosition, spanStartInLine),
+          style: style.baseStyle,
         ));
       }
 
@@ -224,6 +196,7 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
     if (currentPosition < line.length) {
       spans.add(TextSpan(
         text: line.substring(currentPosition),
+        style: style.baseStyle,
       ));
     }
 
@@ -233,39 +206,39 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
   TextStyle _getStyleForType(String type) {
     switch (type) {
       case 'keyword':
-        return widget.style.keywordStyle;
+        return style.keywordStyle;
       case 'class':
-        return widget.style.classStyle;
+        return style.classStyle;
       case 'method':
-        return widget.style.methodStyle;
+        return style.methodStyle;
       case 'variable':
-        return widget.style.variableStyle;
+        return style.variableStyle;
       case 'string':
-        return widget.style.stringStyle;
+        return style.stringStyle;
       case 'number':
-        return widget.style.numberStyle;
+        return style.numberStyle;
       case 'comment':
-        return widget.style.commentStyle;
+        return style.commentStyle;
       case 'tag':
-        return widget.style.tagStyle;
+        return style.tagStyle;
       case 'attribute':
-        return widget.style.attributeStyle;
+        return style.attributeStyle;
       case 'operator':
-        return widget.style.operatorStyle;
+        return style.operatorStyle;
       case 'punctuation':
-        return widget.style.punctuationStyle;
+        return style.punctuationStyle;
       default:
-        return widget.style.baseStyle;
+        return style.baseStyle;
     }
   }
 
   Future<void> _copyToClipboard(BuildContext context) async {
-    await Clipboard.setData(ClipboardData(text: widget.code));
+    await Clipboard.setData(ClipboardData(text: code));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Code copied to clipboard'),
-          backgroundColor: widget.style.backgroundColor.computeLuminance() > 0.5
+          backgroundColor: style.backgroundColor.computeLuminance() > 0.5
               ? Colors.black87
               : Colors.white70,
           behavior: SnackBarBehavior.floating,
