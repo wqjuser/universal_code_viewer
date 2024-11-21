@@ -29,23 +29,19 @@ class UniversalCodeViewer extends StatefulWidget {
 }
 
 class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
-  late final ScrollController _verticalScrollController;
-  late final ScrollController _horizontalScrollController;
   late final List<String> _lines;
   late final UniversalSyntaxHighlighter _highlighter;
+  final ScrollController _horizontalScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _verticalScrollController = ScrollController();
-    _horizontalScrollController = ScrollController();
     _lines = widget.code.split('\n');
     _highlighter = UniversalSyntaxHighlighter(widget.code);
   }
 
   @override
   void dispose() {
-    _verticalScrollController.dispose();
     _horizontalScrollController.dispose();
     super.dispose();
   }
@@ -120,41 +116,47 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
 
   Widget _buildCodeContent() {
     return SelectionArea(
-      child: SingleChildScrollView(
-        controller: _verticalScrollController,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.showLineNumbers) _buildLineNumbers(),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                controller: _horizontalScrollController,
-                child: IntrinsicWidth(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: List.generate(
-                      _lines.length,
-                      (index) => _buildCodeLine(_lines[index], index),
-                    ),
-                  ),
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          controller: _horizontalScrollController,
+          child: SizedBox(
+            width: _calculateContentWidth(),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (widget.showLineNumbers) _buildLineNumbers(),
+                Expanded(
+                  child: _buildCodeLines(),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  double _calculateContentWidth() {
+    // 计算最长行的宽度，这里使用一个估算值
+    // 你可以根据实际情况调整计算方法
+    final longestLine = _lines.reduce((a, b) => a.length > b.length ? a : b);
+    return (longestLine.length * 10.0) + (widget.showLineNumbers ? 60.0 : 0.0);
+  }
+
   Widget _buildLineNumbers() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: List.generate(
-        _lines.length,
-        (index) => Container(
+    return Container(
+      width: 60,
+      padding: const EdgeInsets.only(right: 16),
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _lines.length,
+        itemBuilder: (context, index) => Container(
           height: 24,
-          padding: const EdgeInsets.only(right: 16, top: 4,bottom: 4),
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          alignment: Alignment.centerRight,
           child: Text(
             '${index + 1}',
             style: widget.style.baseStyle.copyWith(
@@ -163,6 +165,15 @@ class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCodeLines() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const ClampingScrollPhysics(),
+      itemCount: _lines.length,
+      itemBuilder: (context, index) => _buildCodeLine(_lines[index], index),
     );
   }
 
