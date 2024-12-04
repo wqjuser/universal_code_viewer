@@ -192,7 +192,7 @@ class UniversalCodeViewer extends StatelessWidget {
                   (showLineNumbers ? 60 : 32) - // 减去行号宽度和padding
                   (padding?.horizontal ?? 32),
             ),
-            child: Text.rich(
+            child: SelectableText.rich(
               TextSpan(children: allCodeSpans),
               style: style.baseStyle,
             ),
