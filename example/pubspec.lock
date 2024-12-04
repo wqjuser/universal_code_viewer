@@ -49,22 +49,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.8"
-  extended_text_field:
-    dependency: transitive
-    description:
-      name: extended_text_field
-      sha256: "49d86de318dbee44304d38cfdf3b42d40daaba5c6090c58ccb1eda35fea92e61"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "16.0.1"
-  extended_text_library:
-    dependency: transitive
-    description:
-      name: extended_text_library
-      sha256: "13d99f8a10ead472d5e2cf4770d3d047203fe5054b152e9eb5dc692a71befbba"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "12.0.1"
   fake_async:
     dependency: transitive
     description:
@@ -309,4 +293,4 @@ packages:
     version: "3.0.3"
 sdks:
   dart: ">=3.5.3 <4.0.0"
-  flutter: ">=3.24.0"
+  flutter: ">=3.18.0-18.0.pre.54"

@@ -12,8 +12,6 @@
  */
 
 import 'dart:ui';
-
-import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/services.dart';
 import 'package:universal_code_viewer/universal_code_viewer.dart';
 import 'package:flutter/material.dart';
@@ -68,7 +66,7 @@ class UniversalCodeViewer extends StatelessWidget {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     physics: const AlwaysScrollableScrollPhysics(),
-                    child: _buildCodeContent(highlighter, lines,context),
+                    child: _buildCodeContent(highlighter, lines, context),
                   ),
                 ),
               ],
@@ -95,12 +93,12 @@ class UniversalCodeViewer extends StatelessWidget {
             padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
             child: isCodeLanguageView
                 ? Text(
-              codeLanguage ?? highlighter.detectedLanguage.toUpperCase(),
-              style: style.baseStyle.copyWith(
-                color: style.baseStyle.color?.withOpacity(0.5),
-                fontSize: 12,
-              ),
-            )
+                    codeLanguage ?? highlighter.detectedLanguage.toUpperCase(),
+                    style: style.baseStyle.copyWith(
+                      color: style.baseStyle.color?.withOpacity(0.5),
+                      fontSize: 12,
+                    ),
+                  )
                 : const SizedBox(),
           ),
           if (enableCopy) ...[
@@ -127,7 +125,7 @@ class UniversalCodeViewer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: List.generate(
           lines.length,
-              (index) => SizedBox(
+          (index) => SizedBox(
             height: 24,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -144,7 +142,7 @@ class UniversalCodeViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines,BuildContext context) {
+  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines, BuildContext context) {
     final List<TextSpan> allCodeSpans = [];
     int currentPosition = 0;
 
@@ -193,7 +191,8 @@ class UniversalCodeViewer extends StatelessWidget {
                   (showLineNumbers ? 60 : 32) - // 减去行号宽度和padding
                   (padding?.horizontal ?? 32),
             ),
-            child: ExtendedSelectableText.rich(
+            child: SelectableText.rich(
+              selectionHeightStyle: BoxHeightStyle.includeLineSpacingMiddle,
               TextSpan(children: allCodeSpans),
               style: style.baseStyle,
             ),
@@ -204,18 +203,17 @@ class UniversalCodeViewer extends StatelessWidget {
   }
 
   List<TextSpan> _getLineSpans(
-      String line,
-      UniversalSyntaxHighlighter highlighter,
-      int lineStart,
-      List<String> allLines,
-      int lineIndex,
-      ) {
+    String line,
+    UniversalSyntaxHighlighter highlighter,
+    int lineStart,
+    List<String> allLines,
+    int lineIndex,
+  ) {
     final List<TextSpan> spans = [];
     final int lineEnd = lineStart + line.length;
 
     // 获取与该行相交的spans
-    final lineSpans = highlighter.spans
-        .where((span) => span.start < lineEnd && span.end > lineStart);
+    final lineSpans = highlighter.spans.where((span) => span.start < lineEnd && span.end > lineStart);
 
     int currentPosition = 0;
 
@@ -289,9 +287,7 @@ class UniversalCodeViewer extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Code copied to clipboard'),
-          backgroundColor: style.backgroundColor.computeLuminance() > 0.5
-              ? Colors.black87
-              : Colors.white70,
+          backgroundColor: style.backgroundColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white70,
           behavior: SnackBarBehavior.floating,
           width: 200,
           shape: RoundedRectangleBorder(
