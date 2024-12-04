@@ -9,7 +9,7 @@ class BetterSelectionWidget extends StatefulWidget {
   const BetterSelectionWidget({
     super.key,
     required this.child,
-    this.selectionColor = const Color(0xFF2196F3),
+    this.selectionColor,
     this.enableDoubleTapSelection = true,
     this.onSelectionChanged,
   });
@@ -19,12 +19,78 @@ class BetterSelectionWidget extends StatefulWidget {
 }
 
 class _BetterSelectionWidgetState extends State<BetterSelectionWidget> {
-  String? _selectedText;
+  final FocusNode _focusNode = FocusNode();
+  final SelectionOverlay? _selectionOverlay = null;
+  Offset? _lastTapDownPosition;
 
-  void _handleSelectionChanged(String? text) {
-    setState(() {
-      _selectedText = text;
-    });
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleTapDown(TapDownDetails details) {
+    _lastTapDownPosition = details.globalPosition;
+  }
+
+  void _handleDoubleTapDown(TapDownDetails details) {
+    if (!widget.enableDoubleTapSelection) return;
+
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final TextSpan? textSpan = _findTextSpanAtPosition(details.localPosition);
+    if (textSpan == null) return;
+
+    final String text = textSpan.toPlainText();
+    final int offset = _getOffsetForPosition(details.localPosition, text);
+    if (offset < 0) return;
+
+    _selectWordAt(text, offset);
+  }
+
+  TextSpan? _findTextSpanAtPosition(Offset position) {
+    if (widget.child is Text) {
+      final Text textWidget = widget.child as Text;
+      if (textWidget.textSpan != null) {
+        return textWidget.textSpan as TextSpan;
+      }
+    } else if (widget.child is RichText) {
+      final RichText richText = widget.child as RichText;
+      return richText.text as TextSpan;
+    }
+    return null;
+  }
+
+  int _getOffsetForPosition(Offset position, String text) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: text),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    return textPainter.getPositionForOffset(position).offset;
+  }
+
+  void _selectWordAt(String text, int offset) {
+    final RegExp wordBoundary = RegExp(r'\b\w+\b');
+    final matches = wordBoundary.allMatches(text);
+
+    for (final match in matches) {
+      if (offset >= match.start && offset <= match.end) {
+        _updateSelection(match.start, match.end);
+        return;
+      }
+    }
+  }
+
+  void _updateSelection(int start, int end) {
+    // 使用 flutter/services.dart 中的剪贴板服务
+    final TextSelection selection = TextSelection(
+      baseOffset: start,
+      extentOffset: end,
+    );
+
+    // 通知选择变化
     widget.onSelectionChanged?.call();
   }
 
@@ -39,60 +105,13 @@ class _BetterSelectionWidgetState extends State<BetterSelectionWidget> {
       ),
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onDoubleTap: widget.enableDoubleTapSelection ? _handleDoubleTap : null,
+        onTapDown: _handleTapDown,
+        onDoubleTapDown: _handleDoubleTapDown,
         child: SelectionArea(
+          focusNode: _focusNode,
           child: widget.child,
         ),
       ),
     );
-  }
-
-  void _handleDoubleTap() {
-    // 这里实现双击选中单词的逻辑
-    final text = _getTextFromContext();
-    if (text != null) {
-      final selection = _findWordBoundary(text);
-      if (selection != null) {
-        _updateSelection(selection);
-      }
-    }
-  }
-
-  String? _getTextFromContext() {
-    // 从上下文中获取文本内容
-    final element = context.findRenderObject() as RenderBox?;
-    if (element == null) return null;
-
-    // 尝试获取文本内容
-    final textContent = widget.child.toString();
-    return textContent;
-  }
-
-  TextSelection? _findWordBoundary(String text) {
-    // 实现单词边界查找逻辑
-    final pattern = RegExp(r'\b\w+\b');
-    final matches = pattern.allMatches(text);
-
-    // 简单实现：返回第一个匹配的单词
-    if (matches.isNotEmpty) {
-      final match = matches.first;
-      return TextSelection(
-        baseOffset: match.start,
-        extentOffset: match.end,
-      );
-    }
-    return null;
-  }
-
-  void _updateSelection(TextSelection selection) {
-    // 更新选择
-    final text = _getTextFromContext();
-    if (text != null) {
-      final selectedText = text.substring(
-        selection.baseOffset,
-        selection.extentOffset,
-      );
-      _handleSelectionChanged(selectedText);
-    }
   }
 }
