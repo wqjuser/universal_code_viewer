@@ -182,13 +182,12 @@ class UniversalCodeViewer extends StatelessWidget {
           PointerDeviceKind.trackpad,
         },
       ),
-      child:
-      BetterSelectionWidget(
-        selectionColor: style.baseStyle.color,
-        enableDoubleTapSelection: true,
-        onSelectionChanged: () {
-          // 处理选择变化
-        },
+      child: SelectionArea(
+        // selectionColor: style.baseStyle.color,
+        // enableDoubleTapSelection: true,
+        // onSelectionChanged: () {
+        //   // 处理选择变化
+        // },
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const ClampingScrollPhysics(),
