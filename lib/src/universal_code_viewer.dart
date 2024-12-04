@@ -12,12 +12,11 @@
  */
 
 import 'dart:ui';
-
 import 'package:flutter/services.dart';
 import 'package:universal_code_viewer/universal_code_viewer.dart';
 import 'package:flutter/material.dart';
 
-class UniversalCodeViewer extends StatelessWidget {
+class UniversalCodeViewer extends StatefulWidget {
   final String code;
   final SyntaxStyle style;
   final bool showLineNumbers;
@@ -40,17 +39,36 @@ class UniversalCodeViewer extends StatelessWidget {
   });
 
   @override
+  State<UniversalCodeViewer> createState() => _UniversalCodeViewerState();
+}
+
+class _UniversalCodeViewerState extends State<UniversalCodeViewer> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.text = widget.code;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final highlighter = UniversalSyntaxHighlighter(code);
-    final lines = code.split('\n');
-    final effectivePadding = padding ?? const EdgeInsets.all(16);
+    final highlighter = UniversalSyntaxHighlighter(widget.code);
+    final lines = widget.code.split('\n');
+    final effectivePadding = widget.padding ?? const EdgeInsets.all(16);
 
     return Container(
       decoration: BoxDecoration(
-        color: style.backgroundColor,
+        color: widget.style.backgroundColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
+          color: widget.style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
         ),
       ),
       child: Column(
@@ -62,12 +80,12 @@ class UniversalCodeViewer extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (showLineNumbers) _buildLineNumbers(lines),
+                if (widget.showLineNumbers) _buildLineNumbers(lines),
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     physics: const AlwaysScrollableScrollPhysics(),
-                    child: _buildCodeContent(highlighter, lines,context),
+                    child: _buildCodeContent(highlighter, lines, context),
                   ),
                 ),
               ],
@@ -83,7 +101,7 @@ class UniversalCodeViewer extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
+            color: widget.style.baseStyle.color?.withOpacity(0.1) ?? Colors.grey,
           ),
         ),
       ),
@@ -92,23 +110,23 @@ class UniversalCodeViewer extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
-            child: isCodeLanguageView
+            child: widget.isCodeLanguageView
                 ? Text(
-                    codeLanguage ?? highlighter.detectedLanguage.toUpperCase(),
-                    style: style.baseStyle.copyWith(
-                      color: style.baseStyle.color?.withOpacity(0.5),
+                    widget.codeLanguage ?? highlighter.detectedLanguage.toUpperCase(),
+                    style: widget.style.baseStyle.copyWith(
+                      color: widget.style.baseStyle.color?.withOpacity(0.5),
                       fontSize: 12,
                     ),
                   )
                 : const SizedBox(),
           ),
-          if (enableCopy) ...[
-            copyWidget ??
+          if (widget.enableCopy) ...[
+            widget.copyWidget ??
                 IconButton(
                   icon: Icon(
                     Icons.copy_rounded,
                     size: 18,
-                    color: style.baseStyle.color?.withOpacity(0.5),
+                    color: widget.style.baseStyle.color?.withOpacity(0.5),
                   ),
                   tooltip: 'Copy to clipboard',
                   onPressed: () => _copyToClipboard(context),
@@ -132,8 +150,8 @@ class UniversalCodeViewer extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
                 '${index + 1}',
-                style: style.baseStyle.copyWith(
-                  color: style.baseStyle.color?.withOpacity(0.5),
+                style: widget.style.baseStyle.copyWith(
+                  color: widget.style.baseStyle.color?.withOpacity(0.5),
                 ),
               ),
             ),
@@ -143,7 +161,7 @@ class UniversalCodeViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines,BuildContext context) {
+  Widget _buildCodeContent(UniversalSyntaxHighlighter highlighter, List<String> lines, BuildContext context) {
     final List<TextSpan> allCodeSpans = [];
     int currentPosition = 0;
 
@@ -159,11 +177,10 @@ class UniversalCodeViewer extends StatelessWidget {
 
       allCodeSpans.addAll(lineSpans);
 
-      // 添加换行符，除了最后一行
       if (i < lines.length - 1) {
         allCodeSpans.add(TextSpan(
           text: '\n',
-          style: style.baseStyle,
+          style: widget.style.baseStyle,
         ));
       }
 
@@ -171,7 +188,6 @@ class UniversalCodeViewer extends StatelessWidget {
     }
 
     return ScrollConfiguration(
-      // 禁用默认的滚动行为
       behavior: ScrollConfiguration.of(context).copyWith(
         scrollbars: false,
         dragDevices: {
@@ -181,26 +197,38 @@ class UniversalCodeViewer extends StatelessWidget {
           PointerDeviceKind.trackpad,
         },
       ),
-      child: SelectionArea(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const ClampingScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              // 确保内容至少和父容器一样宽
-              minWidth: MediaQuery.of(context).size.width -
-                       (showLineNumbers ? 60 : 32) - // 减去行号宽度和padding
-                       (padding?.horizontal ?? 32),
-            ),
-            child: Text.rich(
-              TextSpan(children: allCodeSpans),
-              style: style.baseStyle,
-            ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const ClampingScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: MediaQuery.of(context).size.width -
+                (widget.showLineNumbers ? 60 : 32) -
+                (widget.padding?.horizontal ?? 32),
+          ),
+          child: SelectableText.rich(
+            TextSpan(children: allCodeSpans),
+            style: widget.style.baseStyle,
+            contextMenuBuilder: (context, editableTextState) {
+              return AdaptiveTextSelectionToolbar.editableText(
+                editableTextState: editableTextState,
+              );
+            },
+            onSelectionChanged: (selection, cause) {
+              // 可以在这里处理选择变化事件，如果需要的话
+            },
+            // 保留跳转的双击手势
+            enableInteractiveSelection: true,
+            // 使得文本可以被选择和复制
+            showCursor: false,
+            // 不显示光标，因为这是只读的代码视图
+            minLines: 1,
+            maxLines: null,
           ),
         ),
       ),
     );
-}
+  }
 
   List<TextSpan> _getLineSpans(
     String line,
@@ -212,26 +240,21 @@ class UniversalCodeViewer extends StatelessWidget {
     final List<TextSpan> spans = [];
     final int lineEnd = lineStart + line.length;
 
-    // 获取与该行相交的spans
-    final lineSpans = highlighter.spans
-        .where((span) => span.start < lineEnd && span.end > lineStart);
+    final lineSpans = highlighter.spans.where((span) => span.start < lineEnd && span.end > lineStart);
 
     int currentPosition = 0;
 
     for (var span in lineSpans) {
-      // 转换为行内位置
       final spanStartInLine = (span.start - lineStart).clamp(0, line.length);
       final spanEndInLine = (span.end - lineStart).clamp(0, line.length);
 
-      // 添加未样式化的文本
       if (currentPosition < spanStartInLine) {
         spans.add(TextSpan(
           text: line.substring(currentPosition, spanStartInLine),
-          style: style.baseStyle,
+          style: widget.style.baseStyle,
         ));
       }
 
-      // 添加样式化的span
       if (spanStartInLine < spanEndInLine) {
         spans.add(TextSpan(
           text: line.substring(spanStartInLine, spanEndInLine),
@@ -242,11 +265,10 @@ class UniversalCodeViewer extends StatelessWidget {
       currentPosition = spanEndInLine;
     }
 
-    // 添加剩余的未样式化文本
     if (currentPosition < line.length) {
       spans.add(TextSpan(
         text: line.substring(currentPosition),
-        style: style.baseStyle,
+        style: widget.style.baseStyle,
       ));
     }
 
@@ -256,41 +278,39 @@ class UniversalCodeViewer extends StatelessWidget {
   TextStyle _getStyleForType(String type) {
     switch (type) {
       case 'keyword':
-        return style.keywordStyle;
+        return widget.style.keywordStyle;
       case 'class':
-        return style.classStyle;
+        return widget.style.classStyle;
       case 'method':
-        return style.methodStyle;
+        return widget.style.methodStyle;
       case 'variable':
-        return style.variableStyle;
+        return widget.style.variableStyle;
       case 'string':
-        return style.stringStyle;
+        return widget.style.stringStyle;
       case 'number':
-        return style.numberStyle;
+        return widget.style.numberStyle;
       case 'comment':
-        return style.commentStyle;
+        return widget.style.commentStyle;
       case 'tag':
-        return style.tagStyle;
+        return widget.style.tagStyle;
       case 'attribute':
-        return style.attributeStyle;
+        return widget.style.attributeStyle;
       case 'operator':
-        return style.operatorStyle;
+        return widget.style.operatorStyle;
       case 'punctuation':
-        return style.punctuationStyle;
+        return widget.style.punctuationStyle;
       default:
-        return style.baseStyle;
+        return widget.style.baseStyle;
     }
   }
 
   Future<void> _copyToClipboard(BuildContext context) async {
-    await Clipboard.setData(ClipboardData(text: code));
+    await Clipboard.setData(ClipboardData(text: widget.code));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Code copied to clipboard'),
-          backgroundColor: style.backgroundColor.computeLuminance() > 0.5
-              ? Colors.black87
-              : Colors.white70,
+          backgroundColor: widget.style.backgroundColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white70,
           behavior: SnackBarBehavior.floating,
           width: 200,
           shape: RoundedRectangleBorder(
