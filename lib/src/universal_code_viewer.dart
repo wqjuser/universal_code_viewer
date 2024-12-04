@@ -180,19 +180,18 @@ class UniversalCodeViewer extends StatelessWidget {
           PointerDeviceKind.trackpad,
         },
       ),
-      child: SelectionArea(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const ClampingScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              // 确保内容至少和父容器一样宽
-              minWidth: MediaQuery.of(context).size.width -
-                  (showLineNumbers ? 60 : 32) - // 减去行号宽度和padding
-                  (padding?.horizontal ?? 32),
-            ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const ClampingScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            // 确保内容至少和父容器一样宽
+            minWidth: MediaQuery.of(context).size.width -
+                (showLineNumbers ? 60 : 32) - // 减去行号宽度和padding
+                (padding?.horizontal ?? 32),
+          ),
+          child: SelectionArea(
             child: SelectableText.rich(
-              selectionHeightStyle: BoxHeightStyle.includeLineSpacingMiddle,
               TextSpan(children: allCodeSpans),
               style: style.baseStyle,
             ),
