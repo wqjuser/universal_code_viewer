@@ -13,6 +13,7 @@
 
 import 'dart:ui';
 
+import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/services.dart';
 import 'package:universal_code_viewer/universal_code_viewer.dart';
 import 'package:flutter/material.dart';
@@ -192,7 +193,7 @@ class UniversalCodeViewer extends StatelessWidget {
                   (showLineNumbers ? 60 : 32) - // 减去行号宽度和padding
                   (padding?.horizontal ?? 32),
             ),
-            child: SelectableText.rich(
+            child: ExtendedSelectableText.rich(
               TextSpan(children: allCodeSpans),
               style: style.baseStyle,
             ),

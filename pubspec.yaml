@@ -15,6 +15,7 @@ dependencies:
   web: ^1.1.0
   plugin_platform_interface: ^2.1.8
   string_scanner: ^1.2.0
+  extended_text_field: ^16.0.1
 
 dev_dependencies:
   flutter_test:
